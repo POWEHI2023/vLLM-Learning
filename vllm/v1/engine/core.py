@@ -588,13 +588,17 @@ class EngineCore:
         # or finished and not yet removed from the batch.
         if not self.scheduler.has_requests():
             return {}, False
+
+        # 1. 调度请求
         scheduler_output = self.scheduler.schedule(self._should_throttle_prefills())
+        # 2. ModelRunner 执行调度规划的请求
         future = self.model_executor.execute_model(scheduler_output, non_block=True)
         grammar_output = self.scheduler.get_grammar_bitmask(scheduler_output)
         with (
             self.capture_iteration_details(scheduler_output) as iteration_details,
             self.log_error_detail(scheduler_output),
         ):
+            # 等待 ModelRunner 执行请求返回结果
             model_output = future.result()
             if model_output is None:
                 model_output = self.model_executor.sample_tokens(grammar_output)
@@ -602,6 +606,7 @@ class EngineCore:
         # Before processing the model output, process any aborts that happened
         # during the model execution.
         self._process_aborts_queue()
+        # 3. 根据 ModelRunner 执行的结果, Shcduler 更新状态
         engine_core_outputs = self.scheduler.update_from_output(
             scheduler_output, model_output
         )

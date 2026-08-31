@@ -510,6 +510,7 @@ def _init_lmcache_engine(
     # When use_mla is True, num_kv_head is 1
     hidden_dim_size = num_kv_head * head_size
     if lmcache_config.use_layerwise:
+        # Blending means ?
         if lmcache_config.enable_blending:
             # Use layerwise connector for blending
             vllm_gpu_connector = VLLMBufferLayerwiseGPUConnector(
@@ -613,6 +614,7 @@ class LMCacheConnectorV1Impl:
             self._lookup_requests_in_step: list[str] = []
             self.lmcache_engine = None
         else:
+            # Important !!!
             self.lmcache_engine = _init_lmcache_engine(
                 config,
                 vllm_config,
